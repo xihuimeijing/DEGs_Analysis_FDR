@@ -3,7 +3,7 @@
 ## Required softwares and scripts
 module load R/4.0.2
 module load gcc/8.4.0
-scriptPath=/dfs5/weil21-lab/yumeil1/scripts
+#scriptPath should be set to the path containing all the scripts to use
 
 ## Change to the working directory
 mkdir TCGA GTEx Immunotherapy
@@ -116,7 +116,7 @@ mkdir TCGA GTEx Immunotherapy
   awk '$1>66{print $2}' shuffledLabel.edgeR.1st-3rd.uniqGene.txt|Rscript /dfs5/weil21-lab/yumeil1/scripts/geneEnrichAnalysis.R -s=hg19 -d=GO -n=10 -o=shuffledLabel.edgeR.1st-3rd.DEGs.gt10percent.GO
 
 #2. at GTEx/ directory
-GTExPath=/dfs5/weil21-lab/yumeil1/data/GTEx
+#GTExPath was set to the path containing GTEx read count matrix 
 ##2.1 Prepare read count matrix and permutated conditions
 	mkdir adipose brainAmygdala-spinalcord cellsEVBlym-MSgland heart prostate-brain wholeBlood-muscle
 	cd adipose
