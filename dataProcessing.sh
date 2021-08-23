@@ -110,10 +110,8 @@ mkdir TCGA GTEx Immunotherapy
   sort shuffledLabel.WilcoxonTest.Gene.txt|uniq -c |sort -k1,1nr|awk '{print $1"\t"$2}' >shuffledLabel.WilcoxonTest.1st-3rd.uniqGene.txt
 
 	###GO enrichment analysis
-	awk '$1>66{print $2}' shuffledLabel.DESeq2.1st-3rd.uniqGene.txt|Rscript /dfs5/weil21-lab/yumeil1/scripts/geneEnrichAnalysis.R -s=hg19 -d=KEGG -n=10 -o=shuffledLabel.DESeq2.1st-3rd.DEGs.gt10percent.KEGG
-	awk '$1>66{print $2}' shuffledLabel.DESeq2.1st-3rd.uniqGene.txt|Rscript /dfs5/weil21-lab/yumeil1/scripts/geneEnrichAnalysis.R -s=hg19 -d=GO -n=10 -o=shuffledLabel.DESeq2.1st-3rd.DEGs.gt10percent.GO
-	awk '$1>66{print $2}' shuffledLabel.edgeR.1st-3rd.uniqGene.txt|Rscript /dfs5/weil21-lab/yumeil1/scripts/geneEnrichAnalysis.R -s=hg19 -d=KEGG -n=10 -o=shuffledLabel.edgeR.1st-3rd.DEGs.gt10percent.KEGG
-  awk '$1>66{print $2}' shuffledLabel.edgeR.1st-3rd.uniqGene.txt|Rscript /dfs5/weil21-lab/yumeil1/scripts/geneEnrichAnalysis.R -s=hg19 -d=GO -n=10 -o=shuffledLabel.edgeR.1st-3rd.DEGs.gt10percent.GO
+	awk '$1>66{print $2}' shuffledLabel.DESeq2.1st-3rd.uniqGene.txt|Rscript $scriptPath/geneEnrichAnalysis.R -s=hg19 -d=GO -n=10 -o=shuffledLabel.DESeq2.1st-3rd.DEGs.gt10percent.GO
+	awk '$1>66{print $2}' shuffledLabel.edgeR.1st-3rd.uniqGene.txt|Rscript $scriptPath/geneEnrichAnalysis.R -s=hg19 -d=GO -n=10 -o=shuffledLabel.edgeR.1st-3rd.DEGs.gt10percent.GO
 
 #2. at GTEx/ directory
 #GTExPath was set to the path containing GTEx read count matrix 
@@ -188,10 +186,10 @@ mkdir TCGA GTEx Immunotherapy
 			done;
 		done;
 		paste shuffledLabel.rstFile.txt shuffledLabel.realRatio.tsv >shuffledLabel.realRatio.wtFileName.tsv
-		firstQ1=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
-		thirdQ1=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
-		firstQ2=$(cut -f3 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
-    thirdQ2=$(cut -f3 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
+		firstQ1=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
+		thirdQ1=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
+		firstQ2=$(cut -f3 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
+    		thirdQ2=$(cut -f3 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
 		awk -v first1=$firstQ1 -v third1=$thirdQ1 -v first2=$firstQ2 -v third2=$thirdQ2 '$2>=first1 && $2<=third1 && $3>=first2 && $3<=third2{print $1}' shuffledLabel.realRatio.wtFileName.tsv >shuffledLabel.realRatio.1st-3rd.selected.txt
 		###Summary results
 		prefix=$(ls *.DESeq2.0.01.rst.tsv|sed 's/.DESeq2.0.01.rst.tsv//');
@@ -325,8 +323,8 @@ mkdir TCGA GTEx Immunotherapy
 			done;
 		done;
 		paste shuffledLabel.rstFile.txt shuffledLabel.realRatio.tsv >shuffledLabel.realRatio.wtFileName.tsv
-		firstQ=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
-		thirdQ=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript /dfs5/weil21-lab/yumeil1/scripts/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
+		firstQ=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $2}')
+		thirdQ=$(cut -f2 shuffledLabel.realRatio.wtFileName.tsv |Rscript $scriptPath/quantile_summary.R -c=1|tail -n1|awk '{print $5}')
 		awk -v first=$firstQ -v third=$thirdQ '$2>=first && $2<=third{print $1}' shuffledLabel.realRatio.wtFileName.tsv >shuffledLabel.realRatio.1st-3rd.selected.txt
 		fdrs=0.01
 		mkdir FDR-$fdrs;
