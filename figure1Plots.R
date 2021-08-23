@@ -9,13 +9,13 @@ library(scales)
 library(cowplot)
 
 ########## Prepare data ##########
-setwd("/Users/yumei/Documents/BaiduCloudDrive/ducuments-UCI/projects/UCI-LAB/SNP interaction/nosResid/wtConstraints/realData-test/")
+# Use setwd() to change the working directory to the directory containing count matrices
 samples=c(list.dirs("./TCGA",recursive = F),list.dirs("./GTEx",recursive = F))
-GTEx_gof=readRDS(file="/Users/yumei/Dropbox/Large_Sample_DEGs/figure_xinzhou/data and plots/gtex_goodness_of_fit.rds")
-TCGA_gof=readRDS(file="/Users/yumei/Dropbox/Large_Sample_DEGs/figure_xinzhou/data and plots/tcga_goodness_of_fit.rds")
+GTEx_gof=readRDS(file="gtex_goodness_of_fit.rds")
+TCGA_gof=readRDS(file="tcga_goodness_of_fit.rds")
 gof=c(TCGA_gof, GTEx_gof)
 samples<-samples[c(1:10,12,11)]
-immuno_gof=readRDS(file="/Users/yumei/Dropbox/Large_Sample_DEGs/figure_xinzhou/data and plots/ImmuneTherapy_goodness_of_fit.rds")
+immuno_gof=readRDS(file="ImmuneTherapy_goodness_of_fit.rds")
 
 ########## Define functions ##########
 log2_pseudo1<-trans_new(name="log2_pseudo1",transform = function(x){log2(x+1)},inverse = function(x){2^x-1})
