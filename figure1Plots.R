@@ -91,32 +91,39 @@ pB<-ggplot(data,aes(x=V1))+geom_histogram(fill="white",colour="black",bins=30)+f
   labs(y="# of identified DEGs",x="% of permuted datasets where a gene is wrongly identified as a DEG")+
   theme(strip.background = element_blank())
 ### D: Shuffled DEGs identified percentage across real DEGs
-shuffle_d<-read.delim(file=paste0(immunoSample,"/shuffledLabel.DESeq2.1st-3rd.uniqGene.txt"),header = F)
-shuffle_d$V1=shuffle_d$V1/shuffleNum
+shuffle_d<-read.delim(file=paste0(immunoSamples[i],"/shuffledLabel.DESeq2.1st-3rd.uniqGene.txt"),header = F)
+shuffle_d$V1=shuffle_d$V1/shuffleNum*100
 deseq2[,7]<-rownames(deseq2)
 data<-left_join(deseq2, shuffle_d,by=c("V7"="V2"))
 data[is.na(data$V1),8] = 0
-sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$log2FoldChange),decreasing = TRUE),8]))
-finaldata<-cbind(sortData,"DESeq2")
-colnames(finaldata)[3]="method"
-shuffle_e<-read.delim(file=paste0(immunoSample,"/shuffledLabel.edgeR.1st-3rd.uniqGene.txt"),header = F)
-shuffle_e$V1=shuffle_e$V1/shuffleNum
-edger[,6]<-rownames(edger)
-data<-left_join(edger, shuffle_e,by=c("V6"="V2"))
-data[is.na(data$V1),7] = 0
-sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$logFC),decreasing = TRUE),7]))
-sortData<-cbind(sortData,"edgeR")
-colnames(sortData)[3]="method"
-finaldata<-rbind(finaldata,sortData)
-rho1=round(cor(finaldata[finaldata$method=="DESeq2",1], finaldata[finaldata$method=="DESeq2",2],method = "spearman"),digits = 2)
-rho2=round(cor(finaldata[finaldata$method=="edgeR",1], finaldata[finaldata$method=="edgeR",2],method = "spearman"),digits = 2)
-anno_text <- data.frame(
-  rho = c(paste0("Spearman's rho = ",rho1),paste0("Spearman's rho = ",rho2)),
-  method = c("DESeq2","edgeR")
-)
-pD<-ggplot(finaldata,aes(x=V1,y=V2))+geom_point(alpha=0.6)+geom_smooth()+ facet_wrap(~method, scales = "free_x") + ylim(0,1.2)+
-    geom_text(data = anno_text,mapping= aes(x=0,y= 1.18,label=rho), hjust=-0.1)+
-    labs(y="% of permuted datasets\nwhere a gene is wrongly identified as a DEG",x="Rank of abs. log2(fold-change)\n(from high to low) of DEGs from the original data")+theme(strip.background = element_blank())
+sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$log2FoldChange),decreasing = TRUE),c(2,8)]))
+  finaldata<-cbind(sortData,"DESeq2")
+  colnames(finaldata)=c("rank","log2FC","percent","method")
+  shuffle_e<-read.delim(file=paste0(immunoSamples[i],"/shuffledLabel.edgeR.1st-3rd.uniqGene.txt"),header = F)
+  shuffle_e$V1=shuffle_e$V1/shuffleNum*100
+  edger[,6]<-rownames(edger)
+  data<-left_join(edger, shuffle_e,by=c("V6"="V2"))
+  data[is.na(data$V1),7] = 0
+  sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$logFC),decreasing = TRUE),c(1,7)]))
+  sortData<-cbind(sortData,"edgeR")
+  colnames(sortData)=c("rank","log2FC","percent","method")
+  finaldata<-rbind(finaldata,sortData)
+  rho1=round(cor(finaldata[finaldata$method=="DESeq2",1], finaldata[finaldata$method=="DESeq2",3],method = "spearman"),digits = 2)
+  rho2=round(cor(finaldata[finaldata$method=="edgeR",1], finaldata[finaldata$method=="edgeR",3],method = "spearman"),digits = 2)
+  anno_text <- data.frame(
+    rho = c(paste0("Spearman's rho = ",rho1),paste0("Spearman's rho = ",rho2)),
+    method = c("DESeq2","edgeR")
+  )
+  xbreaks=seq(1,max(finaldata$rank), by=50)
+  tmp<-finaldata[finaldata$method=="DESeq2",]
+  deseqFC=paste(round(abs(na.omit(tmp[xbreaks,])[,2]),digits = 2), collapse = " ")
+  tmp<-finaldata[finaldata$method=="edgeR",]
+  edgerFC=paste(round(abs(na.omit(tmp[xbreaks,])[,2]), digits = 2), collapse = " ")
+  pD<-ggplot(finaldata,aes(x=rank,y=percent))+geom_point(alpha=0.6)+geom_smooth()+ facet_wrap(~method, scales = "free_x") + ylim(0,120)+
+    geom_text(data = anno_text,mapping= aes(x=0,y= 118,label=rho), hjust=-0.1)+ scale_x_continuous(breaks = xbreaks)+
+    labs(y="% of permutated datasets\nwhere a DEG is identified", caption = paste0(deseqFC,"\n",edgerFC), 
+         x="Rank of abs. log2(fold-change)\n(from high to low) of DEGs from the original data")+theme(strip.background = element_blank())
+  
 ### E: GO enrichment barplot
 data<-read.delim(file=paste0(immunoSample,"/shuffledLabel.DESeq2.1st-3rd.DEGs.gt10percent.GO.enrichment.tsv"),header = TRUE)
 data<-data[order(data$p.adjust,decreasing = F),]
@@ -275,28 +282,35 @@ for(i in 1:12){
     theme(strip.background = element_blank())
     
   ### D: Shuffled DEGs repeat time across real DEGs
-  shuffle_d<-read.delim(file=paste0(samples[i],"/FDR-0.01/shuffledLabel.DESeq2.uniqGene.txt"),header = F)
-  shuffle_d$V1=shuffle_d$V1/shuffleNum
+  shuffle_d<-read.delim(file=paste0(samples[i],"/FDR-",format(fdrs[j],scientific = F),"/shuffledLabel.DESeq2.uniqGene.txt"),header = F)
+  shuffle_d$V1=shuffle_d$V1/shuffleNum*100
   deseq2[,7]<-rownames(deseq2)
   binFactor<-as.factor(ceiling(c(1:nrow(deseq2))/100))
   data<-left_join(deseq2, shuffle_d,by=c("V7"="V2"))
   data[is.na(data$V1),8] = 0
-  sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$log2FoldChange),decreasing = TRUE),8]))
-  subdata<-as.data.frame(cbind(sortData[,2],binFactor))
+  sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$log2FoldChange),decreasing = TRUE),c(2,8)]))
+  subdata<-as.data.frame(cbind(sortData[,-1],binFactor))
+  subdata$log2FoldChange<-abs(subdata$log2FoldChange)
   subdata$binFactor<-as.factor(subdata$binFactor)
-  finaldata<-ddply(subdata, ~binFactor, summarise, mean=mean(V1),sd=sd(V1))
+  #subdata<-ddply(subdata, ~binFactor, summarise, mean=mean(V1),sd=sd(V1))
+  #subdata$binFactor=as.numeric(as.character(subdata$binFactor))
+  #pD1<-ggplot(subdata,aes(x=binFactor,y=mean))+geom_point()+geom_smooth()+
+  #  labs(y="Repeat percentatge",x="FC rank",title = "DESeq2")+
+  #  theme(axis.text = element_text(color=textColor),text=element_text(size=textSize), plot.title = element_text(hjust =0.5))
+  finaldata<-ddply(subdata, ~binFactor, summarise, meanP=mean(V1),meanF=mean(log2FoldChange))
   finaldata<-cbind(finaldata,"DESeq2")
   colnames(finaldata)[4]="method"
-  shuffle_e<-read.delim(file=paste0(samples[i],"/FDR-0.01/shuffledLabel.edgeR.uniqGene.txt"),header = F)
+  shuffle_e<-read.delim(file=paste0(samples[i],"/FDR-",format(fdrs[j],scientific = F),"/shuffledLabel.edgeR.uniqGene.txt"),header = F)
   edger[,6]<-rownames(edger)
-  shuffle_e$V1=shuffle_e$V1/shuffleNum
+  shuffle_e$V1=shuffle_e$V1/shuffleNum*100
   binFactor<-as.factor(ceiling(c(1:nrow(edger))/100))
   data<-left_join(edger, shuffle_e,by=c("V6"="V2"))
   data[is.na(data$V1),7] = 0
-  sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$logFC),decreasing = TRUE),7]))
-  subdata<-as.data.frame(cbind(sortData[,2],binFactor))
+  sortData<-as.data.frame(cbind(c(1:nrow(data)),data[order(abs(data$logFC),decreasing = TRUE),c(1,7)]))
+  subdata<-as.data.frame(cbind(sortData[,-1],binFactor))
   subdata$binFactor<-as.factor(subdata$binFactor)
-  subdata<-ddply(subdata, ~binFactor, summarise, mean=mean(V1),sd=sd(V1))
+  subdata$logFC<-abs(subdata$logFC)
+  subdata<-ddply(subdata, ~binFactor, summarise, meanP=mean(V1),meanF=mean(logFC))
   subdata<-cbind(subdata,"edgeR")
   colnames(subdata)[4]="method"
   finaldata<-rbind(finaldata,subdata)
@@ -307,11 +321,18 @@ for(i in 1:12){
     rho = c(paste0("Spearman's rho = ",rho1),paste0("Spearman's rho = ",rho2)),
     method = c("DESeq2","edgeR")
   )
-  pD<-ggplot(finaldata,aes(x=binFactor,y=mean))+geom_point()+geom_smooth()+ facet_wrap(~method, scales = "free_x") +
-    geom_text(data = anno_text,mapping= aes(x=0,y= max(finaldata$mean),label=rho), hjust=-0.1)+
-    scale_y_continuous(trans=log10_pseudo, breaks=trans_breaks(function(x){log10(x+1e-6)},function(x){10^x-1e-6},n=6),labels = function(x){signif(x*100, digits = 1)})+
-    labs(y="% of permuted datasets\nwhere a gene is wrongly identified as a DEG",x="Rank of abs. log2(fold-change)\n(from high to low) of DEGs from the original data")+theme(strip.background = element_blank())
-    
+  xbreaks=seq(1,max(finaldata$binFactor), by=50)
+  tmp<-finaldata[finaldata$method=="DESeq2",]
+  deseqFC=paste(round(na.omit(tmp[xbreaks,])[,3],digits = 2), collapse = " ")
+  tmp<-finaldata[finaldata$method=="edgeR",]
+  edgerFC=paste(round(na.omit(tmp[xbreaks,])[,3], digits = 2), collapse = " ")
+  pD<-ggplot(finaldata,aes(x=binFactor,y=meanP))+geom_point()+geom_smooth()+ facet_wrap(~method, scales = "free_x") +
+    geom_text(data = anno_text,mapping= aes(x=0,y= max(finaldata$meanP),label=rho), hjust=-0.1)+ 
+    scale_y_continuous(trans=log10_pseudo, breaks=trans_breaks(function(x){log10(x+1e-6)},function(x){10^x-1e-6},n=6), labels=function(x){signif(x, digits = 1)})+
+    scale_x_continuous(breaks = xbreaks)+
+    labs(y="% of permutated datasets\nwhere a DEG is identified",caption = paste0(deseqFC,"\n",edgerFC),
+         x="Rank of abs. log2(fold-change)\n(from high to low) of DEGs from real data")+theme(strip.background = element_blank())
+  
   ### E: GO enrichment barplot
   file_d=paste0(samples[i],"/FDR-0.01/shuffledLabel.DESeq2.DEGs.gt10percent.GO.enrichment.tsv")
   if(file.info(file_d)$size==1){
