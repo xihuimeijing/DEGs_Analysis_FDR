@@ -1,0 +1,59 @@
+---
+title: "The identification of differentially expressed genes using the rank-sum Wilcoxon test"
+author: "Yumei Li"
+date: "9/6/2021"
+output: html_document
+---
+This is a tutorial for identifying differentially expressed genes using Wilcoxon test for large-sample-size RNA-seq datasets.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Required R Packages
+```{r}
+suppressWarnings(library(edgeR, quietly = T))
+```
+#### Read the read count matrix file and the condition labels file. 
+The read count matrix file: each row is a gene and each column is a sample; the first column is the gene name; the first row is the sample name.
+The condition labels file: one row with condition labels corresponding to each sample in the read count matrix file.
+You can download the example files from 
+```{r}
+readCount<-read.table(file="examples/examples.countMatrix.tsv", header = T, row.names = 1, stringsAsFactors = F,check.names = F)
+conditions<-read.table(file="examples/examples.conditions.tsv", header = F)
+conditions<-factor(t(conditions))
+```
+#### Count martrix preprocessing using edgeR package 
+```{r}
+y <- DGEList(counts=readCount,group=conditions)
+##Remove rows conssitently have zero or very low counts
+keep <- filterByExpr(y)
+y <- y[keep,keep.lib.sizes=FALSE]
+##Perform TMM normalization and transfer to CPM (Counts Per Million)
+y <- calcNormFactors(y,method="TMM")
+count_norm=cpm(y)
+count_norm<-as.data.frame(count_norm)
+```
+#### Run the rank-sum Wilcoxon test for each gene
+```{r}
+pvalues <- sapply(1:nrow(count_norm),function(i){
+     data<-cbind.data.frame(gene=as.numeric(t(count_norm[i,])),conditions)
+     p=wilcox.test(gene~conditions, data)$p.value
+     return(p)
+   })
+fdr=p.adjust(pvalues,method = "fdr")
+```
+#### Calculate fold-change for each gene
+```{r}
+conditionsLevel<-levels(conditions)
+dataCon1=count_norm[,c(which(conditions==conditionsLevel[1]))]
+dataCon2=count_norm[,c(which(conditions==conditionsLevel[2]))]
+foldChanges=log2(rowMeans(dataCon2)/rowMeans(dataCon1))
+```
+#### Output results base on FDR threshold
+```{r}
+outRst<-data.frame(log2foldChange=foldChanges, pValues=pvalues, FDR=fdr)
+rownames(outRst)=rownames(count_norm)
+outRst=na.omit(outRst)
+fdrThres=0.05
+write.table(outRst[outRst$FDR<fdrThres,], file="examples/examples.WilcoxonTest.rst.tsv",sep="\t", quote=F,row.names = T,col.names = T)
+```
