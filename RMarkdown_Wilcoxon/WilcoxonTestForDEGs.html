@@ -380,13 +380,15 @@ summary {
 
 
 <p>This is a tutorial for identifying differentially expressed genes using Wilcoxon test for large-sample-size RNA-seq datasets.</p>
-<div id="required-r-packages" class="section level4">
-<h4>Required R Packages</h4>
+<div id="load-required-r-packages" class="section level4">
+<h4>Load required R Packages</h4>
 <pre class="r"><code>suppressWarnings(library(edgeR, quietly = T))</code></pre>
 </div>
 <div id="read-the-read-count-matrix-file-and-the-condition-labels-file." class="section level4">
 <h4>Read the read count matrix file and the condition labels file.</h4>
-<p>The read count matrix file: each row is a gene and each column is a sample; the first column is the gene name; the first row is the sample name. The condition labels file: one row with condition labels corresponding to each sample in the read count matrix file. You can download the example files from</p>
+<p>Read count matrix file: each row is a gene and each column is a sample; the first column is the gene name; the first row is the sample name.</p>
+<p>Condition labels file: one row with condition labels corresponding to each sample in the read count matrix file.</p>
+<p>You can download the example files from <a href="https://github.com/xihuimeijing/DEGs_Analysis_FDR/tree/main/RMarkdown_Wilcoxon/examples" class="uri">https://github.com/xihuimeijing/DEGs_Analysis_FDR/tree/main/RMarkdown_Wilcoxon/examples</a></p>
 <pre class="r"><code>readCount&lt;-read.table(file=&quot;examples/examples.countMatrix.tsv&quot;, header = T, row.names = 1, stringsAsFactors = F,check.names = F)
 conditions&lt;-read.table(file=&quot;examples/examples.conditions.tsv&quot;, header = F)
 conditions&lt;-factor(t(conditions))</code></pre>

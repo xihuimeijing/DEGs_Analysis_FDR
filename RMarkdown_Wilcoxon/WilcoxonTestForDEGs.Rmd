@@ -9,14 +9,16 @@ This is a tutorial for identifying differentially expressed genes using Wilcoxon
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-#### Required R Packages
+#### Load required R Packages
 ```{r}
 suppressWarnings(library(edgeR, quietly = T))
 ```
 #### Read the read count matrix file and the condition labels file. 
-The read count matrix file: each row is a gene and each column is a sample; the first column is the gene name; the first row is the sample name.
-The condition labels file: one row with condition labels corresponding to each sample in the read count matrix file.
-You can download the example files from 
+Read count matrix file: each row is a gene and each column is a sample; the first column is the gene name; the first row is the sample name.
+
+Condition labels file: one row with condition labels corresponding to each sample in the read count matrix file.
+
+You can download the example files from https://github.com/xihuimeijing/DEGs_Analysis_FDR/tree/main/RMarkdown_Wilcoxon/examples
 ```{r}
 readCount<-read.table(file="examples/examples.countMatrix.tsv", header = T, row.names = 1, stringsAsFactors = F,check.names = F)
 conditions<-read.table(file="examples/examples.conditions.tsv", header = F)
