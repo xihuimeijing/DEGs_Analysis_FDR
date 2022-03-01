@@ -1,0 +1,10 @@
+library(ggplot2)
+library(gridExtra)
+
+deseq2=read.delim(file="./ImmunotherapyData/GSE91061_BMS038109Sample.real.DESeq2.rst.tsv", header = TRUE, stringsAsFactors = F)
+p1<-ggplot(deseq2,aes(x=abs(log2FoldChange)))+geom_histogram(bins=20, fill="gray", color="black")+labs(y="# of identified DEGs",x="Abs. log2(fold-change)",title="DESeq2")
+edger=read.delim(file="./ImmunotherapyData/GSE91061_BMS038109Sample.real.edgeR.rst.tsv", header = TRUE, stringsAsFactors = F)
+p2<-ggplot(edger,aes(x=abs(logFC)))+geom_histogram(bins=20, fill="gray", color="black")+labs(y="# of identified DEGs",x="Abs. log2(fold-change)",title="edgeR")
+pdf(file="Fig S2.pdf", height = 4, width = 8)
+grid.arrange(p1,p2,nrow=1)
+dev.off()
