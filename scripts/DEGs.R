@@ -85,7 +85,7 @@ if(software == "d"){
   y <- y[keep,,keep.lib.sizes=FALSE]
   y <- calcNormFactors(y)
   design <- model.matrix(~conditions)
-  y <- estimateDisp(y,design)
+  y <- estimateDisp(y,design) # Considering robust=T when you think your data has potential outlier issue.
   #perform quasi-likelihood F-tests:
   fit <- glmQLFit(y,design)
   qlf <- glmQLFTest(fit,coef=2)
